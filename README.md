@@ -20,3 +20,7 @@ SETUP:
 	\q
 8. Execute the following:
 	python tournament_test.py
+
+NOTES:
+* Provides no explicit handling for bad tournaments (0 or 1 players)
+* Makes use of and modifies provided tournament_test.py
