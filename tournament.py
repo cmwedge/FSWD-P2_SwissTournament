@@ -19,6 +19,7 @@ def delete_matches():
     crsr = db.cursor()
     crsr.execute("delete from Match;")
     db.commit()
+    db.close()
 
 def delete_players():
     """Remove all the player records from the database."""
@@ -26,13 +27,16 @@ def delete_players():
     crsr = db.cursor()
     crsr.execute("delete from Player;")
     db.commit()
+    db.close()
 
 def count_players():
     """Returns the number of players currently registered."""
     db = connect()
     crsr = db.cursor()
     crsr.execute("select count(*) from Player;")
-    return int(crsr.fetchall()[0][0])
+    count = int(crsr.fetchall()[0][0])
+    db.close()
+    return count
 
 def register_player(name):
     """Adds a player to the tournament database.
@@ -48,7 +52,7 @@ def register_player(name):
     crsr = db.cursor()
     crsr.execute("insert into Player (Name) values (%s);", (name,))
     db.commit()
-
+    db.close()
 
 def player_standings():
     """Returns a list of the players and their win records, sorted by
@@ -71,10 +75,9 @@ def player_standings():
     crsr = db.cursor()
     crsr.execute(("select * from PlayerStandings;"))
     rows = crsr.fetchall()
-    ps = [(row[0], row[1], row[2], row[3])
-          for row in rows]
-    return ps
+    db.close()
 
+    return rows
 
 def report_match(winner, loser):
     """Records the outcome of a single match between two players.
@@ -88,6 +91,7 @@ def report_match(winner, loser):
     crsr.execute("insert into Match (Winner, Loser) values (%s, %s);",
                  (winner, loser))
     db.commit()
+    db.close()
 
 def get_matches():
     """Gets all recorded matches.
@@ -99,6 +103,8 @@ def get_matches():
     crsr = db.cursor()
     crsr.execute("select winner, loser from Match")
     rows = crsr.fetchall()
+    db.close()
+
     player_matches = {}
     for row in rows:
         player, opponent = row[0], row[1]
@@ -138,7 +144,7 @@ def swiss_pairings():
     unmatched = set((player[0] for player in ps))
     next_round = []
 
-    #if odd number of participants, assign bye
+    # if odd number of participants, assign bye
     if len(unmatched) % 2 == 1:
         for i in range(len(ps)-1, -1, -1):
             if None not in matches[ps[i][0]]:
@@ -146,7 +152,7 @@ def swiss_pairings():
                 unmatched.remove(ps[i][0])
                 break
 
-    #generate matches
+    # generate matches
     while len(unmatched) > 0:
         p1, p2 = None, None
         for i in range(len(ps)):
@@ -154,7 +160,7 @@ def swiss_pairings():
                 p1, p1Name = ps[i][0], ps[i][1]
                 for j in range(i+1, len(ps)):
                     if ps[j][0] in unmatched:
-                        #check if p1 has already played this player
+                        # check if p1 has already played this player
                         if ps[j][0] not in matches[p1]:
                             p2, p2Name = ps[j][0], ps[j][1]
                             break
